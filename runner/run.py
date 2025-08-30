@@ -19,8 +19,8 @@ class Runner:
             print(f"Running for {time() - self.start_time}")
             sleep(0.1)
 
-    def set_raman_amplifier(self):
-        pass
+    def set_raman_amplifier(self, raman_amplifier: RamanAmplifier):
+        self.raman_amplifier = raman_amplifier
 
     def set_signal(self):
         pass
