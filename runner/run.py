@@ -1,7 +1,10 @@
 from typing import Callable
 from time import sleep, time
 
+from custom_types import Power, Length
+
 from fibers import Fiber
+from signals import Signal
 from raman_amplifier import RamanAmplifier
 
 
@@ -22,8 +25,10 @@ class Runner:
     def set_raman_amplifier(self, raman_amplifier: RamanAmplifier):
         self.raman_amplifier = raman_amplifier
 
-    def set_signal(self):
-        pass
+    def set_signal(self, power: Power, wavelength: Length):
+        self.signal = Signal()
+        self.signal.power = power
+        self.signal.wavelength = wavelength
 
     def set_fiber(self):
         pass
