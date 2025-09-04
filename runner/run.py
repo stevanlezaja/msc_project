@@ -30,8 +30,9 @@ class Runner:
         self.signal.power = power
         self.signal.wavelength = wavelength
 
-    def set_fiber(self):
-        pass
+    def set_fiber(self, fiber: Fiber, length: Length):
+        self.fiber = fiber
+        self.fiber.length = length
 
     def set_experiment(self):
         pass
