@@ -10,6 +10,7 @@ from raman_amplifier import RamanAmplifier
 
 class Runner:
     def __init__(self):
+        self.signal: Signal = None
         self.fiber: Fiber = None
         self.raman_amplifier: RamanAmplifier = None
         self.experiment: Callable = None
