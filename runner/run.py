@@ -1,4 +1,5 @@
 from typing import Callable
+import logging
 from time import sleep, time
 
 from custom_types import Power, Length
@@ -7,6 +8,9 @@ from fibers import Fiber
 from signals import Signal
 from raman_amplifier import RamanAmplifier
 from experiment.experiment import RamanSystem
+
+
+log = logging.getLogger("Runner")
 
 
 class Runner:
@@ -21,7 +25,7 @@ class Runner:
 
     def run(self):
         while self.running:
-            print(f"Running for {time() - self.start_time}")
+            log.info(f"Running for {time() - self.start_time}")
             sleep(0.1)
 
     def set_raman_amplifier(self, raman_amplifier: RamanAmplifier):
