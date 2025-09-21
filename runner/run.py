@@ -1,8 +1,8 @@
 from typing import Callable
-import logging
 from time import sleep, time
 
 from custom_types import Power, Length
+import custom_logging as clog
 
 from fibers import Fiber
 from signals import Signal
@@ -10,7 +10,7 @@ from raman_amplifier import RamanAmplifier
 from experiment.experiment import RamanSystem
 
 
-log = logging.getLogger("Runner")
+log = clog.get_logger("Runner")
 
 
 class Runner:
