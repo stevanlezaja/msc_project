@@ -25,7 +25,7 @@ class Runner:
 
     def run(self):
         while self.running:
-            log.info(f"Running for {time() - self.start_time}")
+            log.info("Running for %s", time() - self.start_time)
             sleep(0.1)
 
     def set_raman_amplifier(self, raman_amplifier: RamanAmplifier):
