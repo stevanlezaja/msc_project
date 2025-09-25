@@ -7,7 +7,7 @@ import custom_logging as clog
 from fibers import Fiber
 from signals import Signal
 from raman_amplifier import RamanAmplifier
-from experiment.experiment import RamanSystem
+from experiment.experiment import Experiment
 
 
 log = clog.get_logger("Runner")
@@ -18,7 +18,7 @@ class Runner:
         self.signal: Signal = None
         self.fiber: Fiber = None
         self.raman_amplifier: RamanAmplifier = None
-        self.experiment: RamanSystem = None
+        self.experiment: Experiment = None
         self.running = True
         self.command_buffer: list[Callable] = []
         self.start_time = time()
@@ -41,4 +41,4 @@ class Runner:
         self.fiber.length = length
 
     def set_experiment(self):
-        self.experiment = RamanSystem(self.fiber, self.signal, self.raman_amplifier)
+        self.experiment = Experiment(self.fiber, self.signal, self.raman_amplifier)
