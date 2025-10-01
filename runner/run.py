@@ -1,16 +1,16 @@
 from typing import Callable
-import logging
 from time import sleep, time
 
 from custom_types import Power, Length
+import custom_logging as clog
 
 from fibers import Fiber
 from signals import Signal
 from raman_amplifier import RamanAmplifier
-from experiment.experiment import RamanSystem
+from experiment.experiment import Experiment
 
 
-log = logging.getLogger("Runner")
+log = clog.get_logger("Runner")
 
 
 class Runner:
@@ -18,14 +18,14 @@ class Runner:
         self.signal: Signal = None
         self.fiber: Fiber = None
         self.raman_amplifier: RamanAmplifier = None
-        self.experiment: RamanSystem = None
+        self.experiment: Experiment = None
         self.running = True
         self.command_buffer: list[Callable] = []
         self.start_time = time()
 
     def run(self):
         while self.running:
-            log.info(f"Running for {time() - self.start_time}")
+            log.info("Running for %s", time() - self.start_time)
             sleep(0.1)
 
     def set_raman_amplifier(self, raman_amplifier: RamanAmplifier):
@@ -41,4 +41,4 @@ class Runner:
         self.fiber.length = length
 
     def set_experiment(self):
-        self.experiment = RamanSystem(self.fiber, self.signal, self.raman_amplifier)
+        self.experiment = Experiment(self.fiber, self.signal, self.raman_amplifier)
