@@ -29,5 +29,5 @@ for ra_in, spec in dataset:
         print("Found new max wavelength:", max_wl.nm)
 
 print("Final range of the dataset:")
-print(f"Power range: [{min_power}:{max_power}]")
-print(f"Wavelength range: [{min_wl}:{max_wl}]")
+print(f"Power range: [{min_power.mW}:{max_power.mW}]")
+print(f"Wavelength range: [{min_wl.nm}:{max_wl.nm}]")

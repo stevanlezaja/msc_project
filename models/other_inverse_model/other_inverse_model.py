@@ -13,18 +13,21 @@ from utils.loading_data_from_file import load_raman_dataset
 from ..simple_net import SimpleNet
 
 
+def _compute_spectrum_norm(dataset_path):
+    min_val = float('inf')
+    max_val = float('-inf')
+    for _, spectrum in load_raman_dataset(dataset_path):
+        arr = deepcopy(spectrum).as_array()
+        min_val = min(min_val, arr.min())
+        max_val = max(max_val, arr.max())
+    return min_val, max_val
+
 def load_data(path: str, test_ratio: float = 0.2, seed: int = 42):
-    def _compute_spectrum_norm(dataset_path):
-        min_val = float('inf')
-        max_val = float('-inf')
-        for _, spectrum in load_raman_dataset(dataset_path):
-            arr = deepcopy(spectrum).as_array()
-            min_val = min(min_val, arr.min())
-            max_val = max(max_val, arr.max())
-        return min_val, max_val
+
     norm_min, norm_max = _compute_spectrum_norm(path)
     ra.Spectrum.norm_min = norm_min
     ra.Spectrum.norm_max = norm_max
+
     pairs = list(load_raman_dataset(path))
 
     rng = random.Random(seed)
@@ -43,7 +46,8 @@ def load_data(path: str, test_ratio: float = 0.2, seed: int = 42):
             torch.tensor(sp.normalize().as_array(), dtype=torch.float32)
             for _, sp in pairs
         ])
-        return X, Y
+        Y_nof = Y[:, Y.shape[1]//2:]
+        return X, Y_nof
 
     X_train, Y_train = to_tensor(train_pairs)
     X_test,  Y_test  = to_tensor(test_pairs)
@@ -75,6 +79,9 @@ class OtherInverseModel(SimpleNet):
         self.visualize = visualize
 
         if os.path.isfile(model_path):
+            norm_min, norm_max = _compute_spectrum_norm('data/raman_simulator/3_pumps/100_fiber_0.0_ratio_sorted.json')
+            ra.Spectrum.norm_min = norm_min
+            ra.Spectrum.norm_max = norm_max
             print(f"Loading model from {model_path}")
             self.load_state_dict(torch.load(model_path, map_location=self.device))
             self.to(self.device)
@@ -84,8 +91,6 @@ class OtherInverseModel(SimpleNet):
             self.train_and_save(X_train, Y_train, lr, num_epochs, batch_size, optimizer_type, loss_fn, l2_lambda)
 
     def train_and_save(self, X_train, y_train, lr, num_epochs, batch_size, optimizer_type, loss_fn, l2_lambda):
-        X_train = torch.stack([item.values for item in X_train]).to(self.device)
-        y_train = torch.stack([item.values for item in y_train]).to(self.device)
         
         train_loader = self.train_loader(X_train, y_train)
         
@@ -103,7 +108,7 @@ class OtherInverseModel(SimpleNet):
         else:
             raise ValueError(f"Unsupported optimizer type: {optimizer_type}")
 
-        self.train(
+        self.train_model(
             train_loader=train_loader,
             criterion=criterion,
             optimizer=optimizer,
@@ -117,7 +122,7 @@ class OtherInverseModel(SimpleNet):
         print(f"Model saved to {self.model_path}")
 
     def get_raman_inputs(self, target_output: ra.Spectrum[ct.Power]):
-        y = torch.tensor(target_output.normalize().as_array(), dtype=torch.float32).to(self.device)
+        y = torch.tensor(deepcopy(target_output).normalize().as_array(include_freq=False), dtype=torch.float32).to(self.device)
         self.eval()
         with torch.no_grad():
             predicted_input = self(y).cpu().detach().numpy()
