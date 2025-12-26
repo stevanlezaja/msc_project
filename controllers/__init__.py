@@ -36,6 +36,7 @@ Controller
 """
 
 from .bernoulli_controler import BernoulliController
+from .greedy_bernoulli_controller import GreedyBernoulliController
 from .pid_controller import PidController
 from .controller_base import Controller
 from .manual_controller import ManualController
@@ -44,4 +45,4 @@ from .gradient_descent_controller import GradientDescentController
 from .rl_controller import RLController
 
 __all__ = ["ControllerCli", "ManualController", "BernoulliController", "PidController",
-           "Controller", "GradientDescentController", "RLController"]
+           "Controller", "GradientDescentController", "RLController", "GreedyBernoulliController"]
