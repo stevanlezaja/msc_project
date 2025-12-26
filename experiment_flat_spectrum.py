@@ -1,4 +1,6 @@
 import os
+import json
+from pathlib import Path
 from typing import Any
 import copy
 import numpy as np
@@ -6,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.lines import Line2D
 
+import models as m
 import custom_types as ct
 import custom_types.constants as const
 import custom_types.conversions as conv
@@ -15,6 +18,65 @@ import raman_amplifier as ra
 import fibers as fib
 import controllers as ctrl
 from entry_points import spectrum_control
+
+
+def append_spectra_bundle(
+    path: str | Path,
+    *,
+    target: ra.Spectrum[ct.Power],
+    initial: ra.Spectrum[ct.Power],
+    bern: ra.Spectrum[ct.Power],
+    gd: ra.Spectrum[ct.Power],
+):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Load existing list of bundles (if any)
+    if path.exists():
+        with open(path, "r") as f:
+            data = json.load(f)
+            if not isinstance(data, list):
+                raise ValueError(f"Expected JSON list, got {type(data)}")
+    else:
+        data = []
+
+    # One experiment bundle
+    bundle = {
+        "spectra": {
+            "target": target.to_dict(),
+            "initial": initial.to_dict(),
+            "bern": bern.to_dict(),
+            "gd": gd.to_dict(),
+        },
+    }
+
+    data.append(bundle)
+
+    # Write back
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+
+def save_spectra_bundle(
+    path: str | Path,
+    *,
+    target: ra.Spectrum[ct.Power],
+    initial: ra.Spectrum[ct.Power],
+    bern: ra.Spectrum[ct.Power],
+    gd: ra.Spectrum[ct.Power],
+):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    data = {
+        "target": target.to_dict(),
+        "initial": initial.to_dict(),
+        "bern": bern.to_dict(),
+        "gd": gd.to_dict(),
+    }
+
+    with open(path, "w") as f:
+        json.dump(data, f)
 
 
 def _make_flat_spectrum(off_spectrum: ra.Spectrum[ct.Power], target_val: ct.Power | ct.PowerGain | Any) -> ra.Spectrum[ct.Power]:
@@ -137,8 +199,10 @@ def main():
 
     ax.legend(handles=legend_elements, loc="best")  # type: ignore
 
-    for target_gain in [5, 7, 9, 11, 13]:
+    for target_gain in [9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10]:
         print(f"Optimizing for flat spectrum at {target_gain} dB")
+        bern_loop.inverse_model = m.InverseModel()
+        gd_loop.inverse_model = m.InverseModel()
         target_spectrum = _make_flat_spectrum(
             bern_loop.off_power_spectrum,
             ct.PowerGain(target_gain, 'dB')
@@ -175,6 +239,14 @@ def main():
         line = ax.plot([], [])[0]  # type: ignore
         color = line.get_color()
         line.remove()
+
+        append_spectra_bundle(
+            'data/flat_gain_experiment_results',
+            target=target_spectrum,
+            initial=initial_spectrum,
+            bern=bern_fine_tuned_spectrum,
+            gd=gd_fine_tuned_spectrum,
+        )
 
         plot_spectrums(
             ax,

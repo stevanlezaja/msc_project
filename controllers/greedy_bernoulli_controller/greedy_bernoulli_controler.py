@@ -339,19 +339,6 @@ class GreedyBernoulliController(torch.nn.Module, Controller):
 
         update = self.learning_rate * advantage * eligibility - self.weight_decay * self.logits
         self.logits += update
-    
-
-    # def plot_loss(self, ax: matplotlib.axes.Axes) -> None:
-    #     ax.plot(self.rewards[1:], label='Reward')  # type: ignore
-    #     ax.plot(self.baseline[1:], label='Baseline')  # type: ignore
-    #     # ax.plot(self.history['rewards']['mse_loss'], label='MSE Loss')  # type: ignore
-    #     ax.plot([-x for x in self.history['rewards']['integral_loss'][1:]], label='Integral Loss')  # type: ignore
-    #     ax.plot([-x for x in self.history['rewards']['shape_loss'][1:]], label='Shape Loss')  # type: ignore
-    #     ax.set_xlabel("Iteration")  # type: ignore
-    #     ax.set_ylabel("Reward")  # type: ignore
-    #     ax.set_title("Reward over time")  # type: ignore
-    #     ax.grid()  # type: ignore
-    #     ax.legend()  # type: ignore
 
     def plot_custom_data(self, ax: matplotlib.axes.Axes):
         probs = np.array(self.history['probs'])  # shape: (steps, n_actions)
@@ -362,18 +349,3 @@ class GreedyBernoulliController(torch.nn.Module, Controller):
         ax.set_title("Step probability evolution")  # type: ignore
         ax.grid()  # type: ignore
         ax.legend()  # type: ignore
-
-    def converged(self, thresholds: tuple[float, float], num_steps: int, min_steps: int) -> bool:
-        converged = False
-        assert min_steps > num_steps
-        if len(self.history['probs']) > min_steps:
-            converged = True
-            for x in self.history['probs'][::-num_steps]:  # type: ignore
-                for y in x:
-                    if not (thresholds[0] < y < thresholds[1]):
-                        converged = False
-                        break
-        if converged:
-            print(self.history['probs'][:num_steps])  # type: ignore
-            print(self.history['probs'])
-        return converged
