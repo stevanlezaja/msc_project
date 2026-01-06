@@ -130,15 +130,19 @@ class GreedyBernoulliController(torch.nn.Module, Controller):
         self.target_output = target_output
 
         probs = torch.sigmoid(self.logits)
-        self.history['probs'].append(probs.detach().numpy()) # type: ignore
+        self.history['probs'].append(probs.detach().numpy())  # type: ignore
 
         dist = torch.distributions.Bernoulli(probs)
+        sample = dist.sample()
 
-        sample = torch.zeros_like(dist.sample())
-        num_samples = 1
-        for _ in range(num_samples):
-            sample += dist.sample()
-        sample /= num_samples
+        self.last_sample = sample.detach()
+
+        curr_reward = self.reward(curr_input, curr_output, target_output)
+
+        if self.last_reward is not None and curr_reward < self.last_reward:
+            zero_powers = [ct.Power(0.0, 'W') for _ in curr_input.powers]
+            zero_wavelengths = [ct.Length(0.0, 'm') for _ in curr_input.wavelengths]
+            return ra.RamanInputs(zero_powers, zero_wavelengths)
 
         power_sample = sample[:self.input_dim // 2]
         wavelength_sample = sample[self.input_dim // 2:]
@@ -146,17 +150,10 @@ class GreedyBernoulliController(torch.nn.Module, Controller):
         power_action = self.power_step.value * (power_sample * 2 - 1)
         wavelength_action = self.wavelength_step.value * (wavelength_sample * 2 - 1)
 
-        powers_update: list[ct.Power] = []
-        for power in power_action:
-            powers_update.append(ct.Power(float(power), 'W'))
+        powers_update = [ct.Power(float(p), 'W') for p in power_action]
+        wavelength_update = [ct.Length(float(w), 'm') for w in wavelength_action]
 
-        wavelength_update: list[ct.Length] = []
-        for wl in wavelength_action:
-            wavelength_update.append(ct.Length(float(wl), 'm'))
-
-        self.last_sample = sample.detach()
-
-        return ra.RamanInputs(powers=powers_update, wavelengths=wavelength_update)
+        return ra.RamanInputs(powers_update, wavelength_update)
 
     def update_controller(
             self,
@@ -191,6 +188,11 @@ class GreedyBernoulliController(torch.nn.Module, Controller):
 
         update = self.learning_rate * advantage * eligibility - self.weight_decay * self.logits
         self.logits += update
+        if self.last_reward is not None:
+            if reward > self.last_reward:
+                self.last_reward = reward
+        else:
+            self.last_reward = reward
 
     def plot_custom_data(self, ax: matplotlib.axes.Axes):
         probs = np.array(self.history['probs'])  # shape: (steps, n_actions)

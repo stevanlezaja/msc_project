@@ -9,13 +9,13 @@ from utils import parser
 
 def main():
 
-    controller = ctrl.BernoulliController(
+    controller = ctrl.GreedyBernoulliController(
         lr=1e-1,
-        power_step=ct.Power(1, 'mW'),
+        power_step=ct.Power(2, 'mW'),
         wavelength_step=ct.Length(1, 'nm'),
-        beta=10,
-        gamma=0.9,
-        weight_decay=0.001,
+        beta=100,
+        gamma=0.99,
+        weight_decay=0.01,
         input_dim=6,
     )
 
